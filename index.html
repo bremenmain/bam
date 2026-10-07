@@ -38,11 +38,12 @@ header{position:sticky;top:env(safe-area-inset-top,0);background:var(--bg);z-ind
 .fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0));width:56px;height:56px;border-radius:50%;background:var(--ac);color:var(--acfg);font-size:30px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 dialog{margin:auto auto 0;width:100%;max-width:560px;max-height:90vh;border:0;border-radius:18px 18px 0 0;background:var(--bg);color:var(--fg);padding:18px 18px calc(24px + env(safe-area-inset-bottom,0))}
 dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog.full[open]{display:flex;flex-direction:column;margin:0 auto;height:100dvh;max-height:none;border-radius:0;padding-top:calc(14px + env(safe-area-inset-top,0))}
+dialog.full[open]{overflow-x:hidden;display:flex;flex-direction:column;margin:0 auto;height:100dvh;max-height:none;border-radius:0;padding-top:calc(14px + env(safe-area-inset-top,0))}
 .full .list{flex:1;min-height:0;max-height:none;overflow:auto}
 .full .res{padding:14px 0;min-height:84px}
 .full .res .th{width:52px}
-.sbtn{width:auto;margin:0;flex:none;padding:10px 18px}
+.btn.sbtn{width:auto;margin:0;flex:none;padding:10px 18px}
+.btn.sub2{margin:4px 0 8px;padding:8px 16px;font-size:14px}
 .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .hd b{font-size:17px}
 .seg{display:flex;background:var(--line);border-radius:var(--r);padding:3px;gap:3px;margin:8px 0}
@@ -201,8 +202,8 @@ function addSheet(){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
   inp.style.cssText='flex:1;min-width:0;margin:0';
   sheet('追加',segment({movie:'映画',book:'本',manga:'漫画'},type,k=>type=k),
-    h('div',{class:'row'},inp,h('button',{class:'btn sbtn',onclick:go},'検索')),box,
-    h('button',{class:'btn ghost',onclick:async()=>{const t=inp.value.trim();if(!t)return;await addHit(type,{title:t});toast('追加しました')}},'検索せず追加'));
+    h('div',{class:'row'},inp,h('button',{class:'btn sbtn',onclick:go},'検索')),
+    h('button',{class:'btn ghost sub2',onclick:async()=>{const t=inp.value.trim();if(!t)return;await addHit(type,{title:t});toast('追加しました')}},'検索せず、このタイトルで追加'),box);
   dlg.classList.add('full');
   setTimeout(()=>inp.focus(),50);
 }
