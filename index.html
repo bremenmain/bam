@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#f6f6f4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -38,6 +38,11 @@ header{position:sticky;top:env(safe-area-inset-top,0);background:var(--bg);z-ind
 .fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0));width:56px;height:56px;border-radius:50%;background:var(--ac);color:var(--acfg);font-size:30px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 dialog{margin:auto auto 0;width:100%;max-width:560px;max-height:90vh;border:0;border-radius:18px 18px 0 0;background:var(--bg);color:var(--fg);padding:18px 18px calc(24px + env(safe-area-inset-bottom,0))}
 dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog.full[open]{display:flex;flex-direction:column;margin:0 auto;height:100dvh;max-height:none;border-radius:0;padding-top:calc(14px + env(safe-area-inset-top,0))}
+.full .list{flex:1;min-height:0;max-height:none;overflow:auto}
+.full .res{padding:14px 0;min-height:84px}
+.full .res .th{width:52px}
+.sbtn{width:auto;margin:0;flex:none;padding:10px 18px}
 .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .hd b{font-size:17px}
 .seg{display:flex;background:var(--line);border-radius:var(--r);padding:3px;gap:3px;margin:8px 0}
@@ -139,11 +144,11 @@ let dq;$('#q').addEventListener('input',e=>{clearTimeout(dq);dq=setTimeout(()=>{
 /* ---------- sheet ---------- */
 const dlg=$('#dlg');
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
-const sheet=(title,...c)=>{dlg.replaceChildren(h('div',{class:'hd'},h('b',{},title),h('button',{class:'ic',onclick:()=>dlg.close(),'aria-label':'閉じる'},'✕')),...c.flat().filter(x=>x!=null&&x!==false));if(!dlg.open)dlg.showModal()};
+const sheet=(title,...c)=>{dlg.className='';dlg.replaceChildren(h('div',{class:'hd'},h('b',{},title),h('button',{class:'ic',onclick:()=>dlg.close(),'aria-label':'閉じる'},'✕')),...c.flat().filter(x=>x!=null&&x!==false));if(!dlg.open)dlg.showModal()};
 const segment=(obj,val,on)=>{const w=h('div',{class:'seg'});const d=()=>w.replaceChildren(...Object.entries(obj).map(([k,v])=>h('button',{class:k===val?'on':'',onclick:()=>{val=k;d();on(k)}},v)));d();return w};
 
 /* ---------- search APIs ---------- */
-const get=async(u,o)=>{const r=await fetch(u,o);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()};
+const get=async(u,o)=>{const r=await fetch(u,o);if(r.status===429)throw new Error('混雑中です(429)。少し待つか、設定でGoogle Booksのキーを入れてください');if(!r.ok)throw new Error('HTTP '+r.status);return r.json()};
 async function search(type,t){
   const jobs=[];
   if(type==='movie'){
@@ -154,7 +159,7 @@ async function search(type,t){
   }else{
     if(type==='manga')jobs.push(get('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'query($s:String){Page(perPage:8){media(search:$s,type:MANGA){title{native romaji}coverImage{large}startDate{year}description(asHtml:false)staff(perPage:2){edges{node{name{native full}}}}}}}',variables:{s:t}})})
       .then(d=>d.data.Page.media.map(m=>({title:m.title.native||m.title.romaji,year:m.startDate.year,desc:(m.description||'').replace(/<[^>]*>/g,''),img:m.coverImage.large,author:m.staff.edges.map(e=>e.node.name.native||e.node.name.full).join(', '),src:'AniList'}))));
-    jobs.push(get('https://www.googleapis.com/books/v1/volumes?maxResults=10&printType=books&q='+encodeURIComponent(t))
+    jobs.push(get('https://www.googleapis.com/books/v1/volumes?maxResults=10&printType=books&q='+encodeURIComponent(t)+(cfg('gbooks')?'&key='+encodeURIComponent(cfg('gbooks')):''))
       .then(d=>(d.items||[]).map(x=>{const v=x.volumeInfo;return{title:v.title,year:+(v.publishedDate||'').slice(0,4)||null,desc:v.description||'',img:v.imageLinks?.thumbnail?.replace('http:','https:'),author:(v.authors||[]).join(', '),src:'Google Books'}})));
   }
   const rs=await Promise.allSettled(jobs);
@@ -194,9 +199,11 @@ function addSheet(){
   const inp=h('input',{class:'fld',placeholder:'タイトルを入力',enterKeyHint:'search'}),box=h('div',{class:'list'});
   const go=()=>inp.value.trim()&&runSearch(type,inp.value.trim(),box,async hit=>{await addHit(type,hit);toast('追加しました')});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
-  sheet('追加',segment({movie:'映画',book:'本',manga:'漫画'},type,k=>type=k),inp,
-    h('div',{class:'row'},h('button',{class:'btn',onclick:go},'検索'),
-      h('button',{class:'btn ghost',onclick:async()=>{const t=inp.value.trim();if(!t)return;await addHit(type,{title:t});toast('追加しました')}},'検索せず追加')),box);
+  inp.style.cssText='flex:1;min-width:0;margin:0';
+  sheet('追加',segment({movie:'映画',book:'本',manga:'漫画'},type,k=>type=k),
+    h('div',{class:'row'},inp,h('button',{class:'btn sbtn',onclick:go},'検索')),box,
+    h('button',{class:'btn ghost',onclick:async()=>{const t=inp.value.trim();if(!t)return;await addHit(type,{title:t});toast('追加しました')}},'検索せず追加'));
+  dlg.classList.add('full');
   setTimeout(()=>inp.focus(),50);
 }
 $('#add').onclick=addSheet;
@@ -298,6 +305,8 @@ async function settings(){
   sheet('設定',
     h('div',{class:'lbl'},'TMDB APIキー（映画検索用）'),
     h('input',{class:'fld',value:cfg('tmdb'),placeholder:'キーを貼り付け',autocomplete:'off',onchange(){cfg('tmdb',this.value.trim())}}),
+    h('div',{class:'lbl'},'Google Books APIキー（本の検索用・任意）'),
+    h('input',{class:'fld',value:cfg('gbooks'),placeholder:'キーを貼り付け',autocomplete:'off',onchange(){cfg('gbooks',this.value.trim())}}),
     h('div',{class:'lbl'},'データ'),
     h('div',{class:'note'},`${items.length}件 / 使用量 ${est?Math.round(est.usage/1048576)+'MB':'不明'} / 最終バックアップ ${lb?ymd(lb):'なし'}`),
     h('button',{class:'btn',onclick:exportJSON},'バックアップを書き出す（JSON）'),
