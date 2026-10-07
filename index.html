@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f6f4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>Log</title>
+<style>
+:root{--bg:#f6f6f4;--fg:#1c1c1a;--mute:#8a8a85;--line:#e4e4e0;--card:#fff;--ac:#2f6f5e;--acfg:#fff;--r:10px}
+@media(prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ececea;--mute:#8a8a85;--line:#2a2a28;--card:#1f1f1d;--ac:#6cc3a9;--acfg:#10201b}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{padding-top:env(safe-area-inset-top,0)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;padding-bottom:96px}
+button,input,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+header{position:sticky;top:env(safe-area-inset-top,0);background:var(--bg);z-index:5;padding:12px 16px 4px}
+.top{display:flex;gap:8px;align-items:center}
+.top input{flex:1;min-width:0;border:0;background:var(--card);border-radius:var(--r);padding:10px 14px;outline:0}
+.ic{width:40px;height:40px;border-radius:var(--r);display:grid;place-items:center;color:var(--mute);font-size:20px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:5px 12px;border-radius:99px;color:var(--mute);white-space:nowrap;font-size:14px}
+.chip.on{background:var(--fg);color:var(--bg)}
+.sub .chip{font-size:13px;padding:3px 10px}
+.sub .chip.on{background:none;color:var(--ac);font-weight:600}
+.cnt{color:var(--mute);font-size:13px;padding:0 16px 8px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:18px 12px;padding:4px 16px}
+.card{display:block;min-width:0}
+.cv{aspect-ratio:2/3;background:var(--line);border-radius:6px;overflow:hidden;display:grid;place-items:center;color:var(--mute);font-size:28px;position:relative}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card .t{margin-top:6px;font-size:13px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .m{font-size:12px;color:var(--mute)}
+.dot{position:absolute;right:6px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 2px var(--bg)}
+.dot.todo{background:var(--mute)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:64px 0}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0));width:56px;height:56px;border-radius:50%;background:var(--ac);color:var(--acfg);font-size:30px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+dialog{margin:auto auto 0;width:100%;max-width:560px;max-height:90vh;border:0;border-radius:18px 18px 0 0;background:var(--bg);color:var(--fg);padding:18px 18px calc(24px + env(safe-area-inset-bottom,0))}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hd b{font-size:17px}
+.seg{display:flex;background:var(--line);border-radius:var(--r);padding:3px;gap:3px;margin:8px 0}
+.seg button{flex:1;text-align:center;padding:6px 0;border-radius:8px;color:var(--mute);font-size:14px}
+.seg button.on{background:var(--card);color:var(--fg)}
+.fld{width:100%;border:0;background:var(--card);border-radius:var(--r);padding:10px 14px;outline:0;margin:6px 0}
+textarea.fld{min-height:110px;resize:vertical}
+.btn{background:var(--ac);color:var(--acfg);border-radius:var(--r);padding:10px 16px;text-align:center;display:block;width:100%;margin:8px 0}
+.btn.ghost{background:var(--card);color:var(--fg)}
+.btn.del{background:none;color:#c0463c}
+.row{display:flex;gap:8px;align-items:center}
+.res{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line);width:100%;align-items:flex-start}
+.res .th{width:48px;aspect-ratio:2/3;background:var(--line);border-radius:4px;flex:none;object-fit:cover}
+.res .rt{font-size:14px}
+.res .rm{font-size:12px;color:var(--mute)}
+.res.done{opacity:.45}
+.list{max-height:50vh;overflow:auto}
+.stars button{font-size:26px;color:var(--line);padding:0 4px}
+.stars button.on{color:var(--ac)}
+.lbl{font-size:12px;color:var(--mute);margin-top:12px}
+.hero{display:flex;gap:14px}
+.hero .cv{width:96px;flex:none}
+.note{font-size:12px;color:var(--mute);margin:6px 0}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;max-width:90vw}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <input id="q" type="search" placeholder="タイトルで絞り込み">
+    <button class="ic" id="gear" aria-label="設定">⚙</button>
+  </div>
+  <div class="chips" id="ftype"></div>
+  <div class="chips sub" id="fstat"></div>
+</header>
+<div class="cnt" id="cnt"></div>
+<main id="grid"></main>
+<button class="fab" id="add" aria-label="追加">+</button>
+<dialog id="dlg"></dialog>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const TYPES={movie:'映画',book:'本',manga:'漫画',other:'その他'};
+const STAT={todo:'これから',doing:'進行中',done:'完了'};
+const $=s=>document.querySelector(s);
+const h=(t,p={},...c)=>{const e=document.createElement(t);for(const k in p){if(k==='class')e.className=p[k];else if(k.startsWith('on'))e.addEventListener(k.slice(2),p[k]);else e[k]=p[k]}e.append(...c.flat().filter(x=>x!=null&&x!==false));return e};
+const cfg=(k,v)=>{try{if(v===undefined)return localStorage.getItem('log.'+k)||'';localStorage.setItem('log.'+k,v)}catch{return ''}};
+let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200)};
+
+/* ---------- DB ---------- */
+const db=new Promise((ok,ng)=>{const r=indexedDB.open('log',1);r.onupgradeneeded=()=>{r.result.createObjectStore('items',{keyPath:'id'});r.result.createObjectStore('imgs')};r.onsuccess=()=>ok(r.result);r.onerror=()=>ng(r.error)});
+const q=async(st,mode,m,...a)=>{const d=await db;return new Promise((ok,ng)=>{const r=d.transaction(st,mode).objectStore(st)[m](...a);r.onsuccess=()=>ok(r.result);r.onerror=()=>ng(r.error)})};
+const bulk=async(st,list)=>{const d=await db;return new Promise((ok,ng)=>{const t=d.transaction(st,'readwrite'),s=t.objectStore(st);list.forEach(([v,k])=>k===undefined?s.put(v):s.put(v,k));t.oncomplete=ok;t.onerror=()=>ng(t.error)})};
+
+/* ---------- state ---------- */
+let items=[],F={type:'all',stat:'all',text:''};
+const save=it=>q('items','readwrite','put',it);
+const urls=new Map(),wm=new WeakMap();
+
+/* ---------- list ---------- */
+const io=new IntersectionObserver(es=>es.forEach(async e=>{
+  if(!e.isIntersecting)return;io.unobserve(e.target);
+  const it=wm.get(e.target),img=e.target.querySelector('img');let u=urls.get(it.id);
+  if(!u){const b=await q('imgs','readonly','get',it.id);if(b){u=URL.createObjectURL(b);urls.set(it.id,u)}else u=it.imageUrl}
+  if(u)img.src=u;
+}),{rootMargin:'400px'});
+let cur=[],pos=0;
+const more=new IntersectionObserver(es=>{if(es[0].isIntersecting)chunk()},{rootMargin:'600px'});
+function chunk(){
+  const g=$('#grid');g.querySelector('.sent')?.remove();
+  cur.slice(pos,pos+60).forEach(it=>{
+    const img=h('img',{alt:'',decoding:'async'});img.onerror=()=>img.remove();
+    const c=h('button',{class:'card',onclick:()=>detail(it.id)},
+      h('div',{class:'cv'},it.title.slice(0,1),img,it.status!=='done'&&h('i',{class:'dot '+it.status})),
+      h('div',{class:'t'},it.title),
+      h('div',{class:'m'},(it.rating?'★'.repeat(it.rating):'')||[TYPES[it.type],it.year].filter(Boolean).join(' ')));
+    wm.set(c,it);g.append(c);io.observe(c);
+  });
+  pos+=60;
+  if(pos<cur.length){const s=h('div',{class:'sent'});g.append(s);more.observe(s)}
+}
+function render(){
+  const t=F.text.normalize('NFKC').toLowerCase();
+  cur=items.filter(i=>(F.type==='all'||i.type===F.type)&&(F.stat==='all'||i.status===F.stat)&&(!t||i.title.normalize('NFKC').toLowerCase().includes(t)||(i.author||'').toLowerCase().includes(t)))
+    .sort((a,b)=>b.addedAt-a.addedAt);
+  pos=0;const g=$('#grid');g.replaceChildren();
+  $('#cnt').textContent=cur.length+'件';
+  if(!cur.length)g.append(h('div',{class:'empty'},items.length?'該当なし':'右下の＋から作品を追加'));else chunk();
+}
+function chips(el,obj,key){
+  const draw=()=>el.replaceChildren(...Object.entries({all:'すべて',...obj}).map(([k,v])=>h('button',{class:'chip'+(F[key]===k?' on':''),onclick:()=>{F[key]=k;draw();render()}},v)));draw();
+}
+chips($('#ftype'),{movie:'映画',book:'本',manga:'漫画'},'type');
+chips($('#fstat'),STAT,'stat');
+let dq;$('#q').addEventListener('input',e=>{clearTimeout(dq);dq=setTimeout(()=>{F.text=e.target.value;render()},200)});
+
+/* ---------- sheet ---------- */
+const dlg=$('#dlg');
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+const sheet=(title,...c)=>{dlg.replaceChildren(h('div',{class:'hd'},h('b',{},title),h('button',{class:'ic',onclick:()=>dlg.close(),'aria-label':'閉じる'},'✕')),...c);if(!dlg.open)dlg.showModal()};
+const segment=(obj,val,on)=>{const w=h('div',{class:'seg'});const d=()=>w.replaceChildren(...Object.entries(obj).map(([k,v])=>h('button',{class:k===val?'on':'',onclick:()=>{val=k;d();on(k)}},v)));d();return w};
+
+/* ---------- search APIs ---------- */
+const get=async(u,o)=>{const r=await fetch(u,o);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()};
+async function search(type,t){
+  const jobs=[];
+  if(type==='movie'){
+    const k=cfg('tmdb');if(!k)throw new Error('設定でTMDBのキーを入力してください');
+    const bearer=k.length>40;
+    jobs.push(get('https://api.themoviedb.org/3/search/multi?language=ja-JP&query='+encodeURIComponent(t)+(bearer?'':'&api_key='+k),bearer?{headers:{Authorization:'Bearer '+k}}:{})
+      .then(d=>d.results.filter(x=>x.media_type!=='person').slice(0,10).map(x=>({title:x.title||x.name,year:+(x.release_date||x.first_air_date||'').slice(0,4)||null,desc:x.overview||'',img:x.poster_path&&'https://image.tmdb.org/t/p/w342'+x.poster_path,src:x.media_type==='tv'?'TMDB TV':'TMDB'}))));
+  }else{
+    if(type==='manga')jobs.push(get('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'query($s:String){Page(perPage:8){media(search:$s,type:MANGA){title{native romaji}coverImage{large}startDate{year}description(asHtml:false)staff(perPage:2){edges{node{name{native full}}}}}}}',variables:{s:t}})})
+      .then(d=>d.data.Page.media.map(m=>({title:m.title.native||m.title.romaji,year:m.startDate.year,desc:(m.description||'').replace(/<[^>]*>/g,''),img:m.coverImage.large,author:m.staff.edges.map(e=>e.node.name.native||e.node.name.full).join(', '),src:'AniList'}))));
+    jobs.push(get('https://www.googleapis.com/books/v1/volumes?maxResults=10&printType=books&q='+encodeURIComponent(t))
+      .then(d=>(d.items||[]).map(x=>{const v=x.volumeInfo;return{title:v.title,year:+(v.publishedDate||'').slice(0,4)||null,desc:v.description||'',img:v.imageLinks?.thumbnail?.replace('http:','https:'),author:(v.authors||[]).join(', '),src:'Google Books'}})));
+  }
+  const rs=await Promise.allSettled(jobs);
+  const out=rs.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  if(!out.length&&rs.every(r=>r.status==='rejected'))throw rs[0].reason;
+  return out;
+}
+async function thumb(url){
+  try{const bm=await createImageBitmap(await (await fetch(url)).blob());const w=Math.min(300,bm.width),hh=Math.round(bm.height*w/bm.width);
+    const c=document.createElement('canvas');c.width=w;c.height=hh;c.getContext('2d').drawImage(bm,0,0,w,hh);
+    return await new Promise(r=>c.toBlob(r,'image/webp',.8));}catch{return null}
+}
+async function applyImg(it,url){
+  const b=url&&await thumb(url);
+  if(b){await q('imgs','readwrite','put',b,it.id);const u=urls.get(it.id);if(u){URL.revokeObjectURL(u);urls.delete(it.id)}it.imageUrl=''}
+  else if(url)it.imageUrl=url;
+}
+async function addHit(type,hit){
+  const it={id:crypto.randomUUID(),type,title:hit.title,author:hit.author||'',year:hit.year||null,desc:hit.desc||'',note:'',status:'todo',rating:0,addedAt:Date.now(),loggedAt:null,imageUrl:''};
+  await applyImg(it,hit.img);await save(it);items.push(it);render();return it;
+}
+const resRow=(hit,onpick)=>{
+  const b=h('button',{class:'res',onclick:async()=>{if(b.classList.contains('done'))return;b.classList.add('done');try{await onpick(hit)}catch(e){b.classList.remove('done');toast('失敗: '+e.message)}}},
+    h('img',{class:'th',src:hit.img||'',alt:'',loading:'lazy',onerror(){this.removeAttribute('src')}}),
+    h('div',{},h('div',{class:'rt'},hit.title),h('div',{class:'rm'},[hit.author,hit.year,hit.src].filter(Boolean).join(' / '))));
+  return b;
+};
+async function runSearch(type,text,box,onpick){
+  box.replaceChildren(h('div',{class:'note'},'検索中…'));
+  try{const r=await search(type,text);box.replaceChildren(...(r.length?r.map(x=>resRow(x,onpick)):[h('div',{class:'note'},'見つかりませんでした。別の表記を試してください')]))}
+  catch(e){box.replaceChildren(h('div',{class:'note'},'検索できません: '+e.message))}
+}
+
+/* ---------- add ---------- */
+function addSheet(){
+  let type=F.type==='all'?'movie':F.type;
+  const inp=h('input',{class:'fld',placeholder:'タイトルを入力',enterKeyHint:'search'}),box=h('div',{class:'list'});
+  const go=()=>inp.value.trim()&&runSearch(type,inp.value.trim(),box,async hit=>{await addHit(type,hit);toast('追加しました')});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+  sheet('追加',segment({movie:'映画',book:'本',manga:'漫画'},type,k=>type=k),inp,
+    h('div',{class:'row'},h('button',{class:'btn',onclick:go},'検索'),
+      h('button',{class:'btn ghost',onclick:async()=>{const t=inp.value.trim();if(!t)return;await addHit(type,{title:t});toast('追加しました')}},'検索せず追加')),box);
+  setTimeout(()=>inp.focus(),50);
+}
+$('#add').onclick=addSheet;
+
+/* ---------- detail ---------- */
+const ymd=ms=>{if(!ms)return'';const d=new Date(ms),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+function detail(id){
+  const it=items.find(x=>x.id===id);if(!it)return;
+  const stars=h('div',{class:'stars'});
+  const ds=()=>stars.replaceChildren(...[1,2,3,4,5].map(n=>h('button',{class:n<=it.rating?'on':'',onclick:()=>{it.rating=it.rating===n?0:n;save(it);ds();render()}},'★')));ds();
+  const date=h('input',{class:'fld',type:'date',value:ymd(it.loggedAt),onchange(){it.loggedAt=this.value?+new Date(this.value):null;save(it)}});
+  const box=h('div',{class:'list'});
+  const img=h('img',{alt:''});img.onerror=()=>img.remove();
+  (async()=>{const b=await q('imgs','readonly','get',it.id);const u=b?URL.createObjectURL(b):it.imageUrl;if(u)img.src=u})();
+  sheet('詳細',
+    h('div',{class:'hero'},h('div',{class:'cv'},it.title.slice(0,1),img),
+      h('div',{style:'flex:1;min-width:0'},
+        h('input',{class:'fld',value:it.title,onchange(){if(this.value.trim()){it.title=this.value.trim();save(it);render()}}}),
+        h('div',{class:'note'},[TYPES[it.type],it.year,it.author].filter(Boolean).join(' / ')))),
+    segment(STAT,it.status,k=>{it.status=k;if(k==='done'&&!it.loggedAt){it.loggedAt=Date.now();date.value=ymd(it.loggedAt)}save(it);render()}),
+    stars,h('div',{class:'lbl'},'完了日'),date,h('div',{class:'lbl'},'メモ'),
+    h('textarea',{class:'fld',value:it.note,oninput(){it.note=this.value;save(it)}}),
+    h('button',{class:'btn ghost',onclick:()=>runSearch(it.type,it.title,box,async hit=>{
+      Object.assign(it,{author:hit.author||it.author,year:hit.year||it.year,desc:hit.desc||it.desc});
+      await applyImg(it,hit.img);await save(it);render();detail(id);toast('情報を更新しました')})},'表紙・情報を探す'),box,
+    h('button',{class:'btn del',onclick:async()=>{if(!confirm('「'+it.title+'」を削除しますか？'))return;
+      await q('items','readwrite','delete',id);await q('imgs','readwrite','delete',id);items=items.filter(x=>x.id!==id);dlg.close();render()}},'削除'));
+}
+
+/* ---------- import / export ---------- */
+const blobToUrl=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
+async function exportJSON(){
+  const imgs={};for(const it of items){const b=await q('imgs','readonly','get',it.id);if(b)imgs[it.id]=await blobToUrl(b)}
+  const blob=new Blob([JSON.stringify({version:1,items,imgs})],{type:'application/json'});
+  const a=h('a',{href:URL.createObjectURL(blob),download:'log-backup-'+ymd(Date.now()).replaceAll('-','')+'.json'});a.click();
+  cfg('lastBackup',String(Date.now()));toast('書き出しました');
+}
+function parseTable(text){
+  text=text.replace(/^\uFEFF/,'');const sep=text.split(/\r?\n/)[0].includes('\t')?'\t':',';
+  const rows=[];let row=[],f='',qt=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(qt){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else qt=false}else f+=c}
+    else if(c==='"'&&!f)qt=true;else if(c===sep){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=c}
+  if(f||row.length){row.push(f);rows.push(row)}
+  const hd=rows.shift().map(k=>k.trim());
+  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(hd.map((k,i)=>[k,(r[i]||'').trim()])));
+}
+const pdate=s=>{const m=(s||'').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?+new Date(m[1],m[2]-1,m[3]):null};
+const CAT={'本':'book','書籍':'book','小説':'book','映画':'movie','漫画':'manga','マンガ':'manga','コミック':'manga'};
+const key=it=>it.type+'|'+it.title.normalize('NFKC').toLowerCase();
+async function importFile(file){
+  const buf=await file.arrayBuffer();let text;
+  try{text=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch{text=new TextDecoder('shift_jis').decode(buf)}
+  const have=new Set(items.map(key));let add=[],imgs=[];
+  if(text.trim().startsWith('{')){
+    const d=JSON.parse(text);if(!Array.isArray(d.items))throw new Error('形式が違います');
+    for(const x of d.items){
+      if(typeof x.id!=='string'||typeof x.title!=='string')continue;
+      const it={id:x.id,type:TYPES[x.type]?x.type:'other',title:x.title.slice(0,300),author:String(x.author||''),year:+x.year||null,desc:String(x.desc||''),note:String(x.note||''),
+        status:STAT[x.status]?x.status:'todo',rating:Math.max(0,Math.min(5,+x.rating||0)),addedAt:+x.addedAt||Date.now(),loggedAt:+x.loggedAt||null,imageUrl:/^https:/.test(x.imageUrl||'')?x.imageUrl:''};
+      if(items.some(i=>i.id===it.id)||have.has(key(it)))continue;
+      add.push(it);if(d.imgs?.[it.id]?.startsWith('data:image/'))imgs.push([await (await fetch(d.imgs[it.id])).blob(),it.id]);
+    }
+  }else{
+    for(const r of parseTable(text)){
+      if(!r.title)continue;
+      let n=parseFloat(r.rate)||parseFloat(r.score)||0;if(n>5)n/=2;
+      const st=(r.status||'').toLowerCase();
+      const it={id:crypto.randomUUID(),type:CAT[r.category]||'other',title:r.title,author:r.author||'',year:null,desc:'',note:r.note||'',
+        status:st==='done'?'done':/doing|now|reading|watching/.test(st)?'doing':'todo',rating:Math.round(n),addedAt:pdate(r.dateAdded)||Date.now(),loggedAt:pdate(r.dateLogged),imageUrl:''};
+      if(have.has(key(it)))continue;have.add(key(it));add.push(it);
+    }
+  }
+  await bulk('items',add.map(v=>[v]));await bulk('imgs',imgs);
+  items=await q('items','readonly','getAll');render();toast(add.length+'件を読み込みました');
+}
+const norm=s=>s.normalize('NFKC').toLowerCase().replace(/[\s・:：!！?？~〜\-ー]/g,'');
+async function enrichAll(btn){
+  const targets=[];for(const it of items){if(it.imageUrl||it.type==='other')continue;if(!await q('imgs','readonly','get',it.id))targets.push(it)}
+  let ok=0,skip=0;
+  for(let i=0;i<targets.length;i++){
+    const it=targets[i];btn.textContent=`取得中 ${i+1}/${targets.length}`;
+    try{const r=(await search(it.type,it.title)).filter(x=>x.img);
+      const hit=r.find(x=>norm(x.title)===norm(it.title))||(r.length===1?r[0]:null);
+      if(hit){Object.assign(it,{author:it.author||hit.author||'',year:hit.year||it.year,desc:hit.desc||it.desc});await applyImg(it,hit.img);await save(it);ok++}else skip++}
+    catch(e){if(/TMDB/.test(e.message)){toast(e.message);break}skip++}
+    await new Promise(r=>setTimeout(r,250));
+  }
+  btn.textContent='表紙を一括取得';render();toast(`${ok}件取得、${skip}件は要確認（詳細から個別に探せます）`);
+}
+
+/* ---------- settings ---------- */
+async function settings(){
+  const est=await navigator.storage?.estimate?.();const per=await navigator.storage?.persisted?.();
+  const file=h('input',{type:'file',accept:'.json,.csv,.tsv,.txt',hidden:true,onchange:async function(){if(this.files[0])try{await importFile(this.files[0])}catch(e){toast('読み込み失敗: '+e.message)}this.value=''}});
+  const lb=+cfg('lastBackup');
+  const eb=h('button',{class:'btn ghost',onclick:function(){enrichAll(this)}},'表紙を一括取得');
+  sheet('設定',
+    h('div',{class:'lbl'},'TMDB APIキー（映画検索用）'),
+    h('input',{class:'fld',value:cfg('tmdb'),placeholder:'キーを貼り付け',autocomplete:'off',onchange(){cfg('tmdb',this.value.trim())}}),
+    h('div',{class:'lbl'},'データ'),
+    h('div',{class:'note'},`${items.length}件 / 使用量 ${est?Math.round(est.usage/1048576)+'MB':'不明'} / 最終バックアップ ${lb?ymd(lb):'なし'}`),
+    h('button',{class:'btn',onclick:exportJSON},'バックアップを書き出す（JSON）'),
+    h('button',{class:'btn ghost',onclick:()=>file.click()},'JSON / CSV を読み込む'),file,eb,
+    !per&&h('button',{class:'btn ghost',onclick:async()=>{toast(await navigator.storage.persist()?'永続化されました':'許可されませんでした');settings()}},'データの自動削除を防ぐ'));
+}
+$('#gear').onclick=settings;
+
+/* ---------- boot ---------- */
+(async()=>{
+  items=await q('items','readonly','getAll');render();
+  navigator.storage?.persist?.();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
