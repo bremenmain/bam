@@ -139,7 +139,7 @@ let dq;$('#q').addEventListener('input',e=>{clearTimeout(dq);dq=setTimeout(()=>{
 /* ---------- sheet ---------- */
 const dlg=$('#dlg');
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
-const sheet=(title,...c)=>{dlg.replaceChildren(h('div',{class:'hd'},h('b',{},title),h('button',{class:'ic',onclick:()=>dlg.close(),'aria-label':'閉じる'},'✕')),...c);if(!dlg.open)dlg.showModal()};
+const sheet=(title,...c)=>{dlg.replaceChildren(h('div',{class:'hd'},h('b',{},title),h('button',{class:'ic',onclick:()=>dlg.close(),'aria-label':'閉じる'},'✕')),...c.flat().filter(x=>x!=null&&x!==false));if(!dlg.open)dlg.showModal()};
 const segment=(obj,val,on)=>{const w=h('div',{class:'seg'});const d=()=>w.replaceChildren(...Object.entries(obj).map(([k,v])=>h('button',{class:k===val?'on':'',onclick:()=>{val=k;d();on(k)}},v)));d();return w};
 
 /* ---------- search APIs ---------- */
