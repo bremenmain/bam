@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f6f6f4">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>Log</title>
+<title>bam.</title>
 <style>
 :root{--bg:#f6f6f4;--fg:#1c1c1a;--mute:#8a8a85;--line:#e4e4e0;--card:#fff;--ac:#2f6f5e;--acfg:#fff;--r:10px}
 @media(prefers-color-scheme:dark){:root{--bg:#161615;--fg:#ececea;--mute:#8a8a85;--line:#2a2a28;--card:#1f1f1d;--ac:#6cc3a9;--acfg:#10201b}}
@@ -231,7 +231,7 @@ const blobToUrl=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.res
 async function exportJSON(){
   const imgs={};for(const it of items){const b=await q('imgs','readonly','get',it.id);if(b)imgs[it.id]=await blobToUrl(b)}
   const blob=new Blob([JSON.stringify({version:1,items,imgs})],{type:'application/json'});
-  const a=h('a',{href:URL.createObjectURL(blob),download:'log-backup-'+ymd(Date.now()).replaceAll('-','')+'.json'});a.click();
+  const a=h('a',{href:URL.createObjectURL(blob),download:'bam-backup-'+ymd(Date.now()).replaceAll('-','')+'.json'});a.click();
   cfg('lastBackup',String(Date.now()));toast('書き出しました');
 }
 function parseTable(text){

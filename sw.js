@@ -1,4 +1,4 @@
-const C='log-v1',F=['./','index.html','manifest.webmanifest','icon.svg'];
+const C='bam-v2',F=['./','index.html','manifest.webmanifest','icon.svg'];
 addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>skipWaiting())));
 addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>clients.claim())));
 addEventListener('fetch',e=>{
